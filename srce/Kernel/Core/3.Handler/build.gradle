@@ -1,0 +1,10 @@
+plugins {
+	id 'java-library'
+}
+
+dependencies {
+	implementation project(':Kernel:Core:2.Application')
+	implementation project(':Kernel:Event:Domain')
+	implementation project(':Kernel:Event:Integration')
+	implementation project(':Kernel:Port:Driver')
+}

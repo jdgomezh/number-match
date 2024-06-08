@@ -1,0 +1,12 @@
+plugins {
+	id 'application'
+}
+
+application {
+	mainClass = 'co.edu.poligran.socket.runner.Main'
+}
+
+dependencies {
+	implementation project(':Socket:Infrastructure')
+	implementation project(':Socket:Presentation')
+}

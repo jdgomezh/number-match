@@ -1,0 +1,13 @@
+rootProject.name = 'NumberMatch'
+
+include 'Kernel:Core:1.Domain'
+include 'Kernel:Core:2.Application'
+include 'Kernel:Core:3.Handler'
+include 'Kernel:Event:Domain'
+include 'Kernel:Event:Integration'
+include 'Kernel:Port:Driven'
+include 'Kernel:Port:Driver'
+include 'Socket:Infrastructure'
+include 'Socket:Presentation'
+include 'Socket:Runner'
+

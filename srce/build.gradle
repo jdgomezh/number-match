@@ -1,0 +1,84 @@
+plugins {
+	id 'java'
+	id 'checkstyle'
+	id 'com.diffplug.spotless' version '6.0.4'
+}
+
+group = 'co.edu.poligran'
+version = '1.0.0-SNAPSHOT'
+buildDir = "${rootProject.projectDir}/../dist/exe/${pathToDirName(project.path)}/build"
+
+def pathToDirName(String path) {
+	return path.replaceAll('^\\:', '').replaceAll('[0-9]+\\.', '').replace(':', '.')
+}
+
+allprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	apply plugin: 'idea'
+	apply plugin: 'checkstyle'
+	apply plugin: 'com.diffplug.spotless'
+
+	group = 'co.edu.poligran'
+	version = '1.0.0-SNAPSHOT'
+
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+		testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+	}
+
+	tasks.withType(JavaCompile) {
+		options.encoding = 'UTF-8'
+	}
+
+	test {
+		useJUnitPlatform()
+	}
+
+	spotless {
+		java {
+			eclipse().configFile("${rootProject.projectDir}/.editorconfig")
+			target '**/*.java'
+		}
+	}
+
+	checkstyle {
+		config = rootProject.resources.text.fromFile("${rootProject.projectDir}/../conf/checkstyle/checkstyle.xml")
+		toolVersion = '8.45'
+	}
+}
+
+subprojects {
+	apply plugin: 'java'
+
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		testImplementation 'org.junit.jupiter:junit-jupiter'
+	}
+
+	test {
+		useJUnitPlatform()
+	}
+
+	buildDir = "${rootProject.projectDir}/../dist/prj/${pathToDirName(project.path)}/build"
+}
+
+tasks.named('build') {
+	dependsOn 'checkstyleMain', 'spotlessApply', 'javadocAll'
+}
+
+task javadocAll(type: Javadoc) {
+	subprojects.each { subproject ->
+		source subproject.sourceSets.main.allJava
+		classpath += subproject.sourceSets.main.compileClasspath
+	}
+
+	destinationDir = file("${rootProject.buildDir}/../doc/javadoc")
+}
