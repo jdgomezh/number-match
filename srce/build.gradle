@@ -1,84 +1,56 @@
 plugins {
-	id 'java'
-	id 'checkstyle'
-	id 'com.diffplug.spotless' version '6.0.4'
+	id 'base'
 }
-
-group = 'co.edu.poligran'
-version = '1.0.0-SNAPSHOT'
-buildDir = "${rootProject.projectDir}/../dist/exe/${pathToDirName(project.path)}/build"
 
 def pathToDirName(String path) {
 	return path.replaceAll('^\\:', '').replaceAll('[0-9]+\\.', '').replace(':', '.')
 }
 
-allprojects {
-	apply plugin: 'java'
-	apply plugin: 'eclipse'
-	apply plugin: 'idea'
-	apply plugin: 'checkstyle'
-	apply plugin: 'com.diffplug.spotless'
+subprojects {
+	def hasJavaFiles = fileTree(dir: "${projectDir}/src/main/java", includes: ['**/*.java']).size() > 0
 
-	group = 'co.edu.poligran'
-	version = '1.0.0-SNAPSHOT'
+	if (project.childProjects.isEmpty() && hasJavaFiles) {
+		apply plugin: 'java'
+		apply plugin: 'idea'
+		apply plugin: 'eclipse'
 
-	repositories {
-		mavenCentral()
-	}
+		version = '1.0.0-SNAPSHOT'
+		group = "co.edu.poligran.numbermatch.${pathToDirName(project.path)}"
+		buildDir = "${rootProject.projectDir}/../dist/${pathToDirName(project.path)}/build"
 
-	dependencies {
-		testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-		testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-	}
+		repositories {
+			mavenCentral()
+		}
 
-	tasks.withType(JavaCompile) {
-		options.encoding = 'UTF-8'
-	}
+		dependencies {
+			testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+			testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+		}
 
-	test {
-		useJUnitPlatform()
-	}
+		tasks.withType(JavaCompile) {
+			sourceCompatibility = 21
+			targetCompatibility = 21
+            options.encoding = 'UTF-8'
+            options.release = 21
+		}
 
-	spotless {
-		java {
-			eclipse().configFile("${rootProject.projectDir}/.editorconfig")
-			target '**/*.java'
+		test {
+			useJUnitPlatform()
+		}
+
+		tasks.named('build') {
+			dependsOn 'javadocAll'
+		}
+
+		task javadocAll(type: Javadoc) {
+			source = project.sourceSets.main.allJava
+			classpath += project.sourceSets.main.compileClasspath
+			destinationDir = file("${rootProject.projectDir}/../dist/${pathToDirName(project.path)}/docs")
+			options {
+				encoding 'UTF-8'
+				charSet 'UTF-8'
+				links("https://docs.oracle.com/javase/8/docs/api/")
+			}
 		}
 	}
-
-	checkstyle {
-		config = rootProject.resources.text.fromFile("${rootProject.projectDir}/../conf/checkstyle/checkstyle.xml")
-		toolVersion = '8.45'
-	}
-}
-
-subprojects {
-	apply plugin: 'java'
-
-	repositories {
-		mavenCentral()
-	}
-
-	dependencies {
-		testImplementation 'org.junit.jupiter:junit-jupiter'
-	}
-
-	test {
-		useJUnitPlatform()
-	}
-
-	buildDir = "${rootProject.projectDir}/../dist/prj/${pathToDirName(project.path)}/build"
-}
-
-tasks.named('build') {
-	dependsOn 'checkstyleMain', 'spotlessApply', 'javadocAll'
-}
-
-task javadocAll(type: Javadoc) {
-	subprojects.each { subproject ->
-		source subproject.sourceSets.main.allJava
-		classpath += subproject.sourceSets.main.compileClasspath
-	}
-
-	destinationDir = file("${rootProject.buildDir}/../doc/javadoc")
 }
